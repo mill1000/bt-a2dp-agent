@@ -12,18 +12,21 @@ _LOGGER = logging.getLogger("a2dp-agent")
 
 A2DP_UUID = "0000110d-0000-1000-8000-00805f9b34fb"
 
-AGENT_INTERFACE = "org.bluez.Agent1"
-AGENT_MANAGER_INTERFACE = "org.bluez.AgentManager1"
+DBUS_PROPERTIES_INTERFACE = "org.freedesktop.DBus.Properties"
 
-BUS_NAME = "org.bluez"
-BUS_PATH = "/org/bluez"
+BLUEZ_AGENT_INTERFACE = "org.bluez.Agent1"
+BLUEZ_AGENT_MANAGER_INTERFACE = "org.bluez.AgentManager1"
+BLUEZ_ADAPTER_INTERFACE = "org.bluez.Adapter1"
+
+BLUEZ_BUS_NAME = "org.bluez"
+BLUEZ_BUS_PATH = "/org/bluez"
 
 AGENT_PATH = "/local/ad2pagent"
 
 
 class A2dpAgent(ServiceInterface):
     def __init__(self):
-        super().__init__(AGENT_INTERFACE)
+        super().__init__(BLUEZ_AGENT_INTERFACE)
 
     @method()
     def Release(self):
@@ -54,7 +57,7 @@ class A2dpAgent(ServiceInterface):
         return 0000
 
     @method()
-    def DisplayPasskey(self, device: 'o', passkey: 'u', entered: 'q'):
+    def DisplayPasskey(self, device: 'o', passkey: 'u', _entered: 'q'):
         _LOGGER.debug("Display Passkey Device: %s, Passkey: %s",
                       device, passkey)
 
@@ -77,20 +80,22 @@ async def _run(args):
     _LOGGER.info("Connecting to system bus.")
     bus = await MessageBus(bus_type=BusType.SYSTEM).connect()
 
-    device_path = f"{BUS_PATH}/{args.device}"
+    device_path = f"{BLUEZ_BUS_PATH}/{args.device}"
 
-    introspection = await bus.introspect(BUS_NAME, device_path)
-    proxy_object = bus.get_proxy_object(BUS_NAME, device_path, introspection)
-    properties = proxy_object.get_interface("org.freedesktop.DBus.Properties")
+    introspection = await bus.introspect(BLUEZ_BUS_NAME, device_path)
+    proxy_object = bus.get_proxy_object(
+        BLUEZ_BUS_NAME, device_path, introspection)
+    properties = proxy_object.get_interface(DBUS_PROPERTIES_INTERFACE)
 
     _LOGGER.info("Enabling infinite discovery on device: %s.", args.device)
-    await properties.call_set("org.bluez.Adapter1", "DiscoverableTimeout", Variant('u', 0))
-    await properties.call_set("org.bluez.Adapter1", "Discoverable", Variant('b', True))
+    await properties.call_set(BLUEZ_ADAPTER_INTERFACE, "DiscoverableTimeout", Variant('u', 0))
+    await properties.call_set(BLUEZ_ADAPTER_INTERFACE, "Discoverable", Variant('b', True))
 
     # Get agent manager from bluez
-    introspection = await bus.introspect(BUS_NAME, BUS_PATH)
-    proxy_object = bus.get_proxy_object(BUS_NAME, BUS_PATH, introspection)
-    manager = proxy_object.get_interface(AGENT_MANAGER_INTERFACE)
+    introspection = await bus.introspect(BLUEZ_BUS_NAME, BLUEZ_BUS_PATH)
+    proxy_object = bus.get_proxy_object(
+        BLUEZ_BUS_NAME, BLUEZ_BUS_PATH, introspection)
+    manager = proxy_object.get_interface(BLUEZ_AGENT_MANAGER_INTERFACE)
 
     # Create agent
     agent = A2dpAgent()
