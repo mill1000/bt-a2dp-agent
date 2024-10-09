@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "a2dp-agent"
+description = "Bluetooth agent that accepts A2DP connections."
+version = "1.0.0"
+readme = "README.md"
+authors = [
+  {name = "Tucker Kern", email = "tuckkern@gmail.com"},
+]
+requires-python = ">=3.8"
+license = {text = "MIT"}
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent"
+]
+dependencies = [
+  "dbus-fast"
+]
+
+[project.scripts]
+a2dp-agent = "a2dp_agent:main"
+
+[tool.setuptools]
+py-modules = ["a2dp_agent"]
