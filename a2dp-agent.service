@@ -1,0 +1,13 @@
+[Unit]
+Description=A2DP Bluetooth Agent
+After=bluetooth.service
+Wants=bluetooth.service
+
+[Service]
+ExecStart=/home/pi/.local/bin/a2dp-agent hci0
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=A2DP-Agent
+
+[Install]
+WantedBy=bluetooth.service
